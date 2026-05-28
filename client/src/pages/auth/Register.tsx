@@ -1,0 +1,45 @@
+import { Plane } from "lucide-react";
+
+import RegisterForm from "@/components/auth/RegisterForm";
+
+const Register = () => {
+  return (
+    <div className=" min-h-screen flex">
+      <div className=" hidden lg:flex lg:w-1/2 bg-primary flex-col justify-between p-12 text-primary-foreground">
+        <div className="flex items-center gap-2 text-xl font-semibold">
+          <Plane className="h-6 w-6" />
+          <span>TripCrafter</span>
+        </div>
+        <div className="space-y-4">
+          <h1 className="text-4xl font-bold leading-tight">
+            Plan smarter.
+            <br />
+            Travel better.
+          </h1>
+          <p className="text-primary-foreground/80 text-lg">
+            Join TripCraft and let AI turn your scattered booking confirmations
+            into a beautiful, shareable travel itinerary.
+          </p>
+        </div>
+        <p className="text-primary-foreground/60 text-sm">
+          © {new Date().getFullYear()} TripCrafter. All rights reserved.
+        </p>
+      </div>
+
+      {/* Form panel */}
+      <div className=" flex-1 flex items-center justify-center p-6 bg-background">
+        <div className=" w-full max-w-md">
+          {/* Mobile logo */}
+          <div className="flex items-center gap-2 mb-8 lg:hidden">
+            <Plane className="h-5 w-5 text-primary" />
+            <span className="font-semibold text-lg">TripCrafter</span>
+          </div>
+
+          <RegisterForm />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Register;

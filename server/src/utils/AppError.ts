@@ -1,11 +1,3 @@
-/**
- * Custom error class for operational errors (predictable errors we handle deliberately,
- * like 404s, validation failures, unauthorized access).
- *
- * The `isOperational` flag lets the global error handler distinguish between
- * these expected errors and unexpected programming errors.
- */
-
 export class AppError extends Error {
   public readonly statusCode: number;
   public readonly isOperational: boolean;
@@ -15,7 +7,9 @@ export class AppError extends Error {
     this.statusCode = statusCode;
     this.isOperational = true;
 
-    // Captures the stack trace properly when this class is instantiated
-    Error.captureStackTrace(this, this.constructor);
+    // captureStackTrace is V8-specific — guard for environments that don't have it
+    if (typeof (Error as any).captureStackTrace === "function") {
+      (Error as any).captureStackTrace(this, this.constructor);
+    }
   }
 }

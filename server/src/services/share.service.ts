@@ -1,7 +1,7 @@
-import { AppError } from "../utils/AppError";
-import ItineraryModel, { IItineraryDocument } from "../models/Itinerary.model";
-import { env } from "../config/env";
 import { randomBytes } from "crypto";
+import ItineraryModel, { IItineraryDocument } from "../models/Itinerary.model";
+import { AppError } from "../utils/AppError";
+import { env } from "../config/env";
 
 type ExpiresIn = "7d" | "30d" | "never";
 
@@ -11,17 +11,11 @@ const EXPIRY_MS: Record<ExpiresIn, number | null> = {
   never: null,
 };
 
-/**
- * Enables or disables public sharing for an itinerary.
- *
- * When enabling:
- *   - A share token is generated on first-enable (and reused on subsequent calls)
- *   - An optional expiry window is set on the token
- *
- * When disabling:
- *   - isPublic is set to false — the token is retained so it can be re-enabled
- *     without changing the URL (prevents broken links shared with others)
- */
+export interface ShareResult {
+  shareToken: string;
+  shareUrl: string;
+  shareExpiresAt: Date | null;
+}
 
 async function toggleShare(
   itineraryId: string,
@@ -42,8 +36,8 @@ async function toggleShare(
     return null;
   }
 
-  // Generate a cryptographically secure token on first share
-  // Reuse the existing token so the URL stays stable for anyone who already has it
+  // Generate a token on first share; reuse it on subsequent calls
+  // so any previously shared URLs keep working
   if (!itinerary.shareToken) {
     itinerary.shareToken = randomBytes(32).toString("hex");
   }
@@ -55,25 +49,16 @@ async function toggleShare(
   itinerary.shareExpiresAt = shareExpiresAt;
   await itinerary.save();
 
+  // shareToken is guaranteed to be set at this point
+  const token = itinerary.shareToken as string;
+
   return {
-    shareToken: itinerary.shareToken,
-    shareUrl: `${env.CLIENT_URL}/share/${itinerary.shareToken}`,
+    shareToken: token,
+    shareUrl: `${env.CLIENT_URL}/share/${token}`,
     shareExpiresAt: shareExpiresAt ?? null,
   };
 }
 
-export interface ShareResult {
-  shareToken: string;
-  shareUrl: string;
-  shareExpiresAt: Date | null;
-}
-
-/**
- * Fetches a publicly shared itinerary by its share token.
- * Validates that:
- *   - The itinerary exists and has sharing enabled
- *   - The share link has not expired
- */
 async function getPublicItinerary(token: string): Promise<IItineraryDocument> {
   const itinerary = await ItineraryModel.findOne({
     shareToken: token,
@@ -96,7 +81,6 @@ async function getPublicItinerary(token: string): Promise<IItineraryDocument> {
 
   return itinerary;
 }
-
 export const shareService = {
   toggleShare,
   getPublicItinerary,

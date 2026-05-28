@@ -1,7 +1,3 @@
-/**
- * Validates all environment variables at startup using Zod.
- */
-
 import { z } from "zod";
 import dotenv from "dotenv";
 
@@ -28,20 +24,21 @@ const envSchema = z.object({
   CLOUDINARY_API_KEY: z.string().min(1, "CLOUDINARY_API_KEY is required"),
   CLOUDINARY_API_SECRET: z.string().min(1, "CLOUDINARY_API_SECRET is required"),
   GROQ_API_KEY: z.string().min(1, "GROQ_API_KEY is required"),
-  CLIENT_URL: z.string().min(1, "CLIENT_URL is required"),
+  CLIENT_URL: z.string().url().default("http://localhost:5173"),
 });
 
 const parsed = envSchema.safeParse(process.env);
 
 if (!parsed.success) {
-  console.error("\nInvalid environment variables:\n");
+  console.error("\n❌ Invalid environment variables:\n");
   parsed.error.issues.forEach((issue) => {
-    console.error(`- ${issue.path.join(".")}: ${issue.message}`);
+    console.error(`  ${issue.path.join(".")}: ${issue.message}`);
   });
-
-  console.error("\nPlease fix the above issues and restart the server.");
+  console.error("\nCheck your .env file and try again.\n");
   process.exit(1);
 }
 
-export const env = parsed.data;
+// Non-null assertion is safe here — process.exit(1) above guarantees
+// we only reach this line when parsed.success is true
+export const env = parsed.data!;
 export type Env = typeof env;
